@@ -1,5 +1,10 @@
 export interface Sbr {
   quarry: Quarry;
+  govToken: GovToken;
+}
+
+export interface GovToken {
+  decimals: number;
 }
 
 export interface Quarry {
@@ -21,4 +26,9 @@ export interface Quarry {
 export interface StakedToken {
   decimals: number;
   mint: string;
+}
+
+export interface TokenMintInfo {
+  name: string;
+  symbol: string;
 }

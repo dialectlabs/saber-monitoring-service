@@ -21,27 +21,23 @@ function toDecimals(bn: BN, decimals: number): number {
 
 export interface RawPoolInfo {
   name: string;
-  currentShare: RawShare;
-  nextShare: RawShare;
-}
-
-export interface RawShare {
-  absolute: BN;
+  address: PublicKey;
+  currentEpochAbsoluteShare: BN;
+  nextEpochAbsoluteShare: BN;
 }
 
 export interface PoolInfo {
   name: string;
-  currentShare: Share;
-  nextShare: Share;
+  address: PublicKey;
+  currentEpochAbsoluteShare: number;
+  currentEpochRelativeShare: number;
+  currentEpochRewardsPerDay: number;
+  nextEpochAbsoluteShare: number;
+  nextEpochRelativeShare: number;
+  nextEpochRewardsPerDay: number;
 }
 
-export interface Share {
-  absolute: number;
-  relative: number;
-  rewardsPerDay: number;
-}
-
-async function run() {
+export async function getPoolInfo(): Promise<PoolInfo[]> {
   const sbr: Sbr = (await axios.get<Sbr>(tribecaRegistrySbrUrl)).data;
   // console.log(sbr.quarry.gauge.gaugemeister);
   // console.log(sbr.quarry.rewarder);
@@ -61,10 +57,9 @@ async function run() {
     rewarders.quarries.map(async (quarry) => {
       const quarryAddress = new PublicKey(quarry.quarry);
 
+      const tokenMintAddress = quarry.stakedToken.mint;
       const tokenMintInfo = (
-        await axios.get<TokenMintInfo>(
-          tokenMintInfoUrl(quarry.stakedToken.mint),
-        )
+        await axios.get<TokenMintInfo>(tokenMintInfoUrl(tokenMintAddress))
       ).data;
 
       const [gaugeAddress] = await findGaugeAddress(
@@ -92,12 +87,13 @@ async function run() {
 
       const poolInfo: RawPoolInfo = {
         name: tokenMintInfo.name,
-        currentShare: {
-          absolute: gaugeData ? gaugeData.rewardsShare : new BN(0),
-        },
-        nextShare: {
-          absolute: epochGauge?.totalPower ? epochGauge.totalPower : new BN(0),
-        },
+        address: new PublicKey(tokenMintAddress),
+        currentEpochAbsoluteShare: gaugeData
+          ? gaugeData.rewardsShare
+          : new BN(0),
+        nextEpochAbsoluteShare: epochGauge?.totalPower
+          ? epochGauge.totalPower
+          : new BN(0),
       };
 
       return poolInfo;
@@ -105,55 +101,42 @@ async function run() {
   );
 
   const sumCurrentShare = poolInfos
-    .map((it) => it.currentShare.absolute)
+    .map((it) => it.currentEpochAbsoluteShare)
     .reduce((acc, next) => acc.add(next), new BN(0));
 
   const sumNextShare = poolInfos
-    .map((it) => it.nextShare.absolute)
+    .map((it) => it.nextEpochAbsoluteShare)
     .reduce((acc, next) => acc.add(next), new BN(0));
 
   // console.log(sumCurrentShare.toNumber(), sumNextShare.toNumber());
 
   const calculated: PoolInfo[] = poolInfos.map((it) => {
     const currRelative =
-      (it.currentShare.absolute.toNumber() / sumCurrentShare.toNumber()) * 100;
+      (it.currentEpochAbsoluteShare.toNumber() / sumCurrentShare.toNumber()) *
+      100;
     const nextRelative =
-      (it.nextShare.absolute.toNumber() / sumNextShare.toNumber()) * 100;
+      (it.nextEpochAbsoluteShare.toNumber() / sumNextShare.toNumber()) * 100;
 
     return {
       ...it,
-      currentShare: {
-        absolute: toDecimals(it.currentShare.absolute, sbr.govToken.decimals),
-        relative: currRelative,
-        rewardsPerDay: currRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
-      },
-      nextShare: {
-        absolute: toDecimals(it.nextShare.absolute, sbr.govToken.decimals),
-        relative: nextRelative,
-        rewardsPerDay: nextRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
-      },
+      currentEpochAbsoluteShare: toDecimals(
+        it.currentEpochAbsoluteShare,
+        sbr.govToken.decimals,
+      ),
+      currentEpochRelativeShare: currRelative,
+      currentEpochRewardsPerDay: currRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
+      nextEpochAbsoluteShare: toDecimals(
+        it.nextEpochAbsoluteShare,
+        sbr.govToken.decimals,
+      ),
+      nextEpochRelativeShare: nextRelative,
+      nextEpochRewardsPerDay: nextRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
     };
   });
 
   const sorted = calculated.sort(
-    ({ nextShare: { absolute: a } }, { nextShare: { absolute: b } }) => b - a,
+    ({ nextEpochRelativeShare: a }, { nextEpochAbsoluteShare: b }) => b - a,
   );
 
-  sorted.forEach(({ name, currentShare, nextShare }) =>
-    console.log(
-      name,
-      `current share: ${currentShare.relative.toFixed(
-        2,
-      )}% (${currentShare.absolute.toFixed(
-        3,
-      )}): ${currentShare.rewardsPerDay.toFixed(0)} SBR/day`,
-      `next share: ${nextShare.relative.toFixed(
-        2,
-      )}% (${nextShare.absolute.toFixed(3)}): ${nextShare.rewardsPerDay.toFixed(
-        0,
-      )} SBR/day`,
-    ),
-  );
+  return Promise.resolve(sorted);
 }
-
-run();

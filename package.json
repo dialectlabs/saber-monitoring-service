@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@dialectlabs/monitor": "link:./../monitor",
     "@gokiprotocol/client": "^0.6.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
@@ -36,9 +37,11 @@
     "axios": "^0.26.0",
     "bn.js": "^5.2.0",
     "jsbi": "^4.1.0",
+    "luxon": "^2.3.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "twitter-api-v2": "^1.11.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",
@@ -48,6 +51,7 @@
     "@types/bn.js": "^5.1.0",
     "@types/express": "^4.17.13",
     "@types/jest": "27.4.0",
+    "@types/luxon": "^2.0.9",
     "@types/node": "^16.0.0",
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.0.0",

@@ -2,9 +2,14 @@ import axios from 'axios';
 import { Rewarders, Sbr, TokenMintInfo } from './saber-wars-api-dto';
 import { buildGaugeSdk } from './quarry-sdk-factory';
 import { PublicKey } from '@solana/web3.js';
-import { findEpochGaugeAddress, findGaugeAddress } from '@quarryprotocol/gauge';
+import {
+  findEpochGaugeAddress,
+  findGaugeAddress,
+  GaugemeisterData,
+} from '@quarryprotocol/gauge';
 import BN from 'bn.js';
 import { QUARRY_CODERS } from '@quarryprotocol/quarry-sdk';
+import { Duration } from 'luxon';
 
 const tribecaRegistrySbrUrl =
   'https://raw.githubusercontent.com/TribecaHQ/tribeca-registry-build/master/registry/mainnet/sbr.json';
@@ -26,6 +31,11 @@ export interface RawPoolInfo {
   nextEpochAbsoluteShare: BN;
 }
 
+export interface SaberWarsInfo {
+  poolsInfo: PoolInfo[];
+  epochInfo: EpochInfo;
+}
+
 export interface PoolInfo {
   name: string;
   address: PublicKey;
@@ -37,21 +47,35 @@ export interface PoolInfo {
   nextEpochRewardsPerDay: number;
 }
 
-export async function getPoolInfo(): Promise<PoolInfo[]> {
-  const sbr: Sbr = (await axios.get<Sbr>(tribecaRegistrySbrUrl)).data;
-  // console.log(sbr.quarry.gauge.gaugemeister);
-  // console.log(sbr.quarry.rewarder);
+export interface EpochInfo {
+  currentEpoch: number;
+  currentEpochRemainingTime: Duration;
+}
+
+const gaugeSdk = buildGaugeSdk();
+
+function getEpochInfo(gaugemeister: GaugemeisterData) {
+  const currentEpoch = gaugemeister.currentRewardsEpoch;
+  const currentEpochRemainingTime = Duration.fromObject({
+    seconds:
+      gaugemeister.nextEpochStartsAt.toNumber() - new Date().getTime() / 1000,
+  });
+
+  const epochInfo: EpochInfo = {
+    currentEpoch,
+    currentEpochRemainingTime,
+  };
+  return epochInfo;
+}
+
+async function getPoolsInfo(
+  gaugemeisterAddress: PublicKey,
+  gaugemeister: GaugemeisterData,
+  sbr: Sbr,
+) {
   const rewarders: Rewarders = (
     await axios.get<Rewarders>(rewardersUrl(sbr.quarry.rewarder))
   ).data;
-
-  const gaugeSdk = buildGaugeSdk();
-
-  const gaugemeisterAddress = new PublicKey(sbr.quarry.gauge.gaugemeister);
-  const gaugemeister = await gaugeSdk.gauge.fetchGaugemeister(
-    gaugemeisterAddress,
-  );
-  console.log(JSON.stringify(gaugemeister));
 
   const poolInfos: RawPoolInfo[] = await Promise.all(
     rewarders.quarries.map(async (quarry) => {
@@ -108,8 +132,6 @@ export async function getPoolInfo(): Promise<PoolInfo[]> {
     .map((it) => it.nextEpochAbsoluteShare)
     .reduce((acc, next) => acc.add(next), new BN(0));
 
-  // console.log(sumCurrentShare.toNumber(), sumNextShare.toNumber());
-
   const calculated: PoolInfo[] = poolInfos.map((it) => {
     const currRelative =
       (it.currentEpochAbsoluteShare.toNumber() / sumCurrentShare.toNumber()) *
@@ -133,10 +155,23 @@ export async function getPoolInfo(): Promise<PoolInfo[]> {
       nextEpochRewardsPerDay: nextRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
     };
   });
-
-  const sorted = calculated.sort(
-    ({ nextEpochRelativeShare: a }, { nextEpochAbsoluteShare: b }) => b - a,
+  return calculated.sort(
+    ({ currentEpochAbsoluteShare: a }, { nextEpochAbsoluteShare: b }) => b - a,
   );
+}
 
-  return Promise.resolve(sorted);
+export async function getWarsInfo(): Promise<SaberWarsInfo> {
+  const sbr: Sbr = (await axios.get<Sbr>(tribecaRegistrySbrUrl)).data;
+
+  const gaugemeisterAddress = new PublicKey(sbr.quarry.gauge.gaugemeister);
+  const gaugemeister = await gaugeSdk.gauge.fetchGaugemeister(
+    gaugemeisterAddress,
+  );
+  const epochInfo = getEpochInfo(gaugemeister);
+  const poolsInfo = await getPoolsInfo(gaugemeisterAddress, gaugemeister, sbr);
+
+  return Promise.resolve({
+    epochInfo,
+    poolsInfo,
+  });
 }

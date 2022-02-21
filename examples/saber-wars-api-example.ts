@@ -1,8 +1,8 @@
-import { getPoolInfo } from 'src/saber-wars-api/saber-wars-api';
+import { getWarsInfo } from '../src/saber-wars-api/saber-wars-api';
 
 async function run() {
-  const pools = await getPoolInfo();
-  pools.forEach(
+  const warsInfo = await getWarsInfo();
+  warsInfo.poolsInfo.forEach(
     ({
       name,
       currentEpochRelativeShare,

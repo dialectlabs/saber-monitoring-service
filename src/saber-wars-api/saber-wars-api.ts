@@ -15,7 +15,7 @@ const tribecaRegistrySbrUrl =
   'https://raw.githubusercontent.com/TribecaHQ/tribeca-registry-build/master/registry/mainnet/sbr.json';
 
 const rewardersUrl = (rewarderAddress: string) =>
-  `https://raw.githubusercontent.com/QuarryProtocol/rewarder-list-build/9fc2af0f20480c1510c2e065f2820fcf0c5046bd/mainnet-beta/rewarders/${rewarderAddress}/meta.json`;
+  `https://raw.githubusercontent.com/QuarryProtocol/rewarder-list-build/master/mainnet-beta/rewarders/${rewarderAddress}/meta.json`;
 
 const tokenMintInfoUrl = (tokenMintAddress: string) =>
   `https://cdn.jsdelivr.net/gh/CLBExchange/certified-token-list/101/${tokenMintAddress}.json`;
@@ -146,13 +146,13 @@ async function getPoolsInfo(
         sbr.govToken.decimals,
       ),
       currentEpochRelativeShare: currRelative,
-      currentEpochRewardsPerDay: currRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
+      currentEpochRewardsPerDay: currRelative * 10_000,
       nextEpochAbsoluteShare: toDecimals(
         it.nextEpochAbsoluteShare,
         sbr.govToken.decimals,
       ),
       nextEpochRelativeShare: nextRelative,
-      nextEpochRewardsPerDay: nextRelative * 10_000 * 0.9, // I'm sorry about this, didn't find a way to get rewards/year for arbitrary epoch
+      nextEpochRewardsPerDay: nextRelative * 10_000,
     };
   });
   return calculated.sort(

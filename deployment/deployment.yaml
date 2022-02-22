@@ -28,6 +28,8 @@ spec:
     spec:
       containers:
       - env:
+        - name: WHALE_MONITOR_THRESHOLD
+          value: "4000000"
         - name: MAINNET_RPC_URL
           valueFrom:
             secretKeyRef:
@@ -53,9 +55,7 @@ spec:
             secretKeyRef:
               key: TWITTER_ACCESS_SECRET
               name: env-vars
-        - name: WHALE_MONITOR_THRESHOLD
-          value: 4000000 # 5M
-        image: dialectlab/saber-monitoring-service:0.1.0
+        image: dialectlab/saber-monitoring-service:0.0.1
         imagePullPolicy: Always
         name: saber-monitoring-service
         resources: {}

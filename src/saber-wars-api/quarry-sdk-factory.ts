@@ -6,10 +6,7 @@ import { makeSaberProvider } from '@saberhq/anchor-contrib';
 import { Provider } from '@project-serum/anchor';
 
 export const buildGaugeSdk = (): GaugeSDK => {
-  const connection = new Connection(
-    'https://solana-api.syndica.io/access-token/6sW38nSZ1Qm4WVRN4Vnbjb9EF2QudlpGZBToMtPyqoXqkIenDwJ5FVK1HdWSqqah/rpc',
-    'recent',
-  );
+  const connection = new Connection(process.env.MAINNET_RPC_URL, 'recent');
 
   const keypair = new Keypair();
   const wallet = new NodeWallet(keypair);

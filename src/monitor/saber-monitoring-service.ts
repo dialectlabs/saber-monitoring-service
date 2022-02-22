@@ -44,7 +44,7 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
           }),
         );
         return Promise.resolve(sourceData);
-      }, Duration.fromObject({ minutes: 5 }))
+      }, Duration.fromObject({ minutes: 1 }))
       .transform<number>({
         keys: ['nextEpochAbsoluteShare'],
         pipelines: [

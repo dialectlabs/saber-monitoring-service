@@ -87,7 +87,7 @@ ${this.numberFormat.format(
     return trace.find((it) => it.type === 'trigger')?.output;
   }
 
-  @Cron('0 0 11,19 * * *', {
+  @Cron('0 0 11,16,19 * * *', {
     // @Cron('0,30 * * * * *', {
     name: 'notifications',
     timeZone: 'America/New_York',
@@ -103,7 +103,7 @@ ${this.numberFormat.format(
       .map((it) => it.nextEpochAbsoluteShare)
       .reduce((acc, next) => acc + next, 0);
     const voteLeader = poolsInfo[0];
-    const message = `Epoch ${epochInfo.currentEpoch} progress: ${(
+    const message = `Epoch ${epochInfo.currentEpoch + 1} progress: ${(
       (totalNextEpochShare / totalCurrentEpochShare) *
       100
     ).toFixed(0)}% of votes committed
@@ -111,7 +111,7 @@ ${this.numberFormat.format(
   Math.round(totalNextEpochShare),
 )} votes committed (${this.numberFormat.format(
       Math.round(totalCurrentEpochShare),
-    )} cast in epoch ${epochInfo.currentEpoch - 1})
+    )} cast in epoch ${epochInfo.currentEpoch})
 Vote leader: ${voteLeader.name} | ${this.numberFormat.format(
       Math.round(voteLeader.nextEpochAbsoluteShare),
     )} votes and ${this.numberFormat.format(

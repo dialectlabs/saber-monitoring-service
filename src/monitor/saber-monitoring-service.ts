@@ -90,7 +90,6 @@ ${this.numberFormat.format(
     timeZone: 'America/New_York',
   })
   async handleCron() {
-    this.logger.warn('fsaf');
     const { poolsInfo, epochInfo } = await getWarsInfo();
 
     const totalCurrentEpochShare = poolsInfo

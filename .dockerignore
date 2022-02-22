@@ -1,0 +1,8 @@
+Dockerfile
+.dockerignore
+node_modules
+dist
+npm-debug.log
+env-dev-fb-admin-key.json
+*.env
+*.sh

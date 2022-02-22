@@ -87,7 +87,7 @@ ${this.numberFormat.format(
     return trace.find((it) => it.type === 'trigger')?.output;
   }
 
-  @Cron('0 0 11,16,19 * * *', {
+  @Cron('0 0 11,19 * * *', {
     // @Cron('0,30 * * * * *', {
     name: 'notifications',
     timeZone: 'America/New_York',

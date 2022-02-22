@@ -156,7 +156,7 @@ async function getPoolsInfo(
     };
   });
   return calculated.sort(
-    ({ currentEpochAbsoluteShare: a }, { nextEpochAbsoluteShare: b }) => b - a,
+    ({ nextEpochAbsoluteShare: a }, { nextEpochAbsoluteShare: b }) => b - a,
   );
 }
 

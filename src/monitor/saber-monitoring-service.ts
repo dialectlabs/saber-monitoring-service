@@ -21,7 +21,7 @@ import { TwitterNotificationSink } from './twitter-notification-sink';
 
 @Injectable()
 export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
-  private readonly notificaitonSink: NotificationSink =
+  private readonly notificationSink: NotificationSink =
     new TwitterNotificationSink();
 
   private readonly logger = new Logger(SaberMonitoringService.name);
@@ -32,7 +32,7 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
 
     const monitor: Monitor<PoolInfo> = Monitors.builder({
       subscriberRepository: new NoopSubscriberRepository(),
-      notificationSink: this.notificaitonSink,
+      notificationSink: this.notificationSink,
     })
       .defineDataSource<PoolInfo>()
       .poll(async () => {
@@ -119,7 +119,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     )} 
 
 ⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
-    await this.notificaitonSink.push({ message }, []);
+    await this.notificationSink.push({ message }, []);
   }
 
   async onModuleDestroy() {

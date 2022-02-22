@@ -370,9 +370,16 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@dialectlabs/monitor@link:../monitor":
-  version "0.0.0"
-  uid ""
+"@dialectlabs/monitor@0.1.22":
+  version "0.1.22"
+  resolved "https://registry.yarnpkg.com/@dialectlabs/monitor/-/monitor-0.1.22.tgz#e6b414f541ef9b8fdfb9681b29fdce6eece7a654"
+  integrity sha512-F8hsdTf24UxN0ZzP2SmySry3wV9FsPQjUO6zjrq+CF9QMsmt7I6d8/Fu469vQQLJPcEV0oPlSfmKJSyls7fK/Q==
+  dependencies:
+    "@dialectlabs/web3" "^0.1.4"
+    "@project-serum/anchor" "^0.18.0"
+    "@solana/web3.js" "^1.27.0"
+    luxon "^2.3.0"
+    rxjs "^7.5.2"
 
 "@dialectlabs/web3@^0.1.4":
   version "0.1.4"

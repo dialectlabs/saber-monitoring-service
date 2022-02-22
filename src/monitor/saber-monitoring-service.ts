@@ -54,7 +54,10 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
               threshold,
             },
             {
-              messageBuilder: ({ context }) => this.createWhaleAlert(context),
+              messageBuilder: ({ context }) => {
+                this.logger.log('Building whale alert');
+                return this.createWhaleAlert(context);
+              },
             },
           ),
         ],
@@ -90,6 +93,7 @@ ${this.numberFormat.format(
     timeZone: 'America/New_York',
   })
   async handleCron() {
+    this.logger.log('Cron execution started');
     const { poolsInfo, epochInfo } = await getWarsInfo();
 
     const totalCurrentEpochShare = poolsInfo

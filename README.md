@@ -1,6 +1,37 @@
 # Saber monitoring service
 
-A reference implementation of a service running `@dialectlabs/monitor` for saber wars.
+A reference implementation of `@dialectlabs/monitor` used to power notifications in a twitter bot https://twitter.com/saberwarsbot.
+The twitter bot sends the following tweets
+
+## Votes cast 
+Votes cast tweet is sent at 11AM ET and 7PM ET and includes the following data
+- Progress for % of votes cast vs. previous epoch.
+- The time left in the epoch.
+- Top vote getter
+
+```
+Epoch 7 progress: 77% of votes committed
+449,646,909 votes committed (581,650,867 cast in epoch 6)
+Vote leader: Saber UST-USDC LP | 194,329,794 votes and 432,183 SBR/day
+Time remaining in epoch: 01:00:11:58 
+
+⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️
+```
+
+## Whale alert
+
+Whale alert is sent anytime a gauge changes by more than 4,000,000 votes and includes the following data
+- Number of votes committed to gauge.
+- Updated reward.
+
+```
+⚔️🐳🚨 Whale alert! 🚨🐳⚔️
+
+4,489,856 votes committed to Saber cUSDC-cUSDT LP | 49,184 SBR/day
+
+⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️
+```
+
 See https://github.com/dialectlabs/monitor for details on the notifications module.
 
 ## Development

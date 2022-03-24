@@ -6,3 +6,5 @@ npm-debug.log
 env-dev-fb-admin-key.json
 *.env
 *.sh
+.idea
+.git

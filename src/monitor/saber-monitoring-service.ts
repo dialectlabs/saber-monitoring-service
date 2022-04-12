@@ -8,7 +8,6 @@ import {
   Context,
   Monitor,
   Monitors,
-  NotificationSink,
   Pipelines,
   SourceData,
   Trace,
@@ -21,7 +20,7 @@ import { TwitterNotificationSink } from './twitter-notification-sink';
 
 @Injectable()
 export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
-  private readonly notificationSink: NotificationSink =
+  private readonly notificationSink: TwitterNotificationSink =
     new TwitterNotificationSink();
 
   private readonly logger = new Logger(SaberMonitoringService.name);
@@ -32,10 +31,10 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
 
     const monitor: Monitor<PoolInfo> = Monitors.builder({
       subscriberRepository: new NoopSubscriberRepository(),
-      notificationSink: this.notificationSink,
     })
       .defineDataSource<PoolInfo>()
       .poll(async () => {
+        this.logger.log('Polling saber wars data');
         const warsInfo = await getWarsInfo();
         const sourceData: SourceData<PoolInfo>[] = warsInfo.poolsInfo.map(
           (data) => ({
@@ -45,23 +44,23 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
         );
         return Promise.resolve(sourceData);
       }, Duration.fromObject({ minutes: 1 }))
-      .transform<number>({
+      .transform<number, number>({
         keys: ['nextEpochAbsoluteShare'],
         pipelines: [
-          Pipelines.threshold(
-            {
-              type: 'increase',
-              threshold,
-            },
-            {
-              messageBuilder: ({ context }) => {
-                this.logger.log('Building whale alert');
-                return this.createWhaleAlert(context);
-              },
-            },
-          ),
+          Pipelines.threshold({
+            type: 'increase',
+            threshold,
+          }),
         ],
       })
+      .notify()
+      .custom(({ context }) => {
+        this.logger.log('Building whale alert');
+        return {
+          message: this.createWhaleAlert(context),
+        };
+      }, this.notificationSink)
+      .and()
       .dispatch('unicast')
       .build();
     monitor.start();
@@ -122,7 +121,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     )} 
 
 ⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
-    await this.notificationSink.push({ message }, []);
+    await this.notificationSink.push({ message });
   }
 
   async onModuleDestroy() {

@@ -370,23 +370,24 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@dialectlabs/monitor@0.1.22":
-  version "0.1.22"
-  resolved "https://registry.yarnpkg.com/@dialectlabs/monitor/-/monitor-0.1.22.tgz#e6b414f541ef9b8fdfb9681b29fdce6eece7a654"
-  integrity sha512-F8hsdTf24UxN0ZzP2SmySry3wV9FsPQjUO6zjrq+CF9QMsmt7I6d8/Fu469vQQLJPcEV0oPlSfmKJSyls7fK/Q==
+"@dialectlabs/monitor@^1.2.6":
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/@dialectlabs/monitor/-/monitor-1.2.6.tgz#47e4a763bab1895725d8dd0459b9a76c4fee6bcd"
+  integrity sha512-/BWnJuLzuMVaUGMrxyqpnqGMt7Zbf8gmWHyWLy7edsNFYm5HMQX9xsniupVNeRE/YqyeuSAAJedm6PqmcEUiMQ==
   dependencies:
-    "@dialectlabs/web3" "^0.1.4"
-    "@project-serum/anchor" "^0.18.0"
+    "@dialectlabs/web3" "^0.2.0"
+    "@project-serum/anchor" "0.23.0"
+    "@sendgrid/mail" "^7.6.2"
     "@solana/web3.js" "^1.27.0"
     luxon "^2.3.0"
     rxjs "^7.5.2"
 
-"@dialectlabs/web3@^0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@dialectlabs/web3/-/web3-0.1.4.tgz#856863065d6ca560e77236b2d7c546f7ebf353eb"
-  integrity sha512-TgPHNHhha7ip+2H9ZwENgVU3ZM2ldIaLpTNUh55oKf662vbe/NmRRrylazJzSqlTIq8AzhtfycLW76zK61HlRA==
+"@dialectlabs/web3@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@dialectlabs/web3/-/web3-0.2.0.tgz#8ea5f9a63e1ef37f8c8611a17cbcb3ea7089c338"
+  integrity sha512-NgRV7s7y5brWDZCIcReFpIZRDoygNL13hHwuXq2U30xK1EY1HSr1S+oJMjHYqAAwt0jDraRetoq2ZyJm4xGAOg==
   dependencies:
-    "@project-serum/anchor" "0.18.2"
+    "@project-serum/anchor" "0.23.0"
     "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.22.0"
     bytebuffer "^5.0.1"
@@ -776,33 +777,13 @@
     consola "^2.15.0"
     node-fetch "^2.6.1"
 
-"@project-serum/anchor@0.18.2", "@project-serum/anchor@^0.18.0":
-  version "0.18.2"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.18.2.tgz#0f13b5c2046446b7c24cf28763eec90febb28485"
-  integrity sha512-uyjiN/3Ipp+4hrZRm/hG18HzGLZyvP790LXrCsGO3IWxSl28YRhiGEpKnZycfMW94R7nxdUoE3wY67V+ZHSQBQ==
+"@project-serum/anchor@0.23.0":
+  version "0.23.0"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.23.0.tgz#2b2eb6b51601b073e8db26663aa2d6c2f2841771"
+  integrity sha512-LV2/ifZOJVFTZ4GbEloXln3iVfCvO1YM8i7BBCrUm4tehP7irMx4nr4/IabHWOzrQcQElsxSP/lb1tBp+2ff8A==
   dependencies:
-    "@project-serum/borsh" "^0.2.2"
-    "@solana/web3.js" "^1.17.0"
-    base64-js "^1.5.1"
-    bn.js "^5.1.2"
-    bs58 "^4.0.1"
-    buffer-layout "^1.2.0"
-    camelcase "^5.3.1"
-    crypto-hash "^1.3.0"
-    eventemitter3 "^4.0.7"
-    find "^0.3.0"
-    js-sha256 "^0.9.0"
-    pako "^2.0.3"
-    snake-case "^3.0.4"
-    toml "^3.0.0"
-
-"@project-serum/anchor@^0.21.0":
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.21.0.tgz#ad5fb33744991ec1900cdb2fd22707c908b12b5f"
-  integrity sha512-flRuW/F+iC8mitNokx82LOXyND7Dyk6n5UUPJpQv/+NfySFrNFlzuQZaBZJ4CG5g9s8HS/uaaIz1nVkDR8V/QA==
-  dependencies:
-    "@project-serum/borsh" "^0.2.4"
-    "@solana/web3.js" "^1.17.0"
+    "@project-serum/borsh" "^0.2.5"
+    "@solana/web3.js" "^1.36.0"
     base64-js "^1.5.1"
     bn.js "^5.1.2"
     bs58 "^4.0.1"
@@ -817,7 +798,7 @@
     snake-case "^3.0.4"
     toml "^3.0.0"
 
-"@project-serum/borsh@^0.2.2", "@project-serum/borsh@^0.2.4":
+"@project-serum/borsh@^0.2.5":
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/@project-serum/borsh/-/borsh-0.2.5.tgz#6059287aa624ecebbfc0edd35e4c28ff987d8663"
   integrity sha512-UmeUkUoKdQ7rhx6Leve1SssMR/Ghv8qrEiyywyxSWg7ooV7StdpPBhciiy5eB3T0qU1BXvdRNC8TdrkxK7WC5Q==
@@ -876,6 +857,29 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
+"@sendgrid/client@^7.6.2":
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-7.6.2.tgz#5d08949120dad679f34260f1b875b4f57a8d688e"
+  integrity sha512-Yw3i3vPBBwfiIi+4i7+1f1rwQoLlLsu3qW16d1UuRp6RgX6H6yHYb2/PfqwNyCC0qzqIWGUKPWwYe5ggcr5Guw==
+  dependencies:
+    "@sendgrid/helpers" "^7.6.2"
+    axios "^0.26.0"
+
+"@sendgrid/helpers@^7.6.2":
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/@sendgrid/helpers/-/helpers-7.6.2.tgz#e4abdd4e259611ed549ae8e0f4a46cd4f587e5d1"
+  integrity sha512-kGW0kM2AOHfXjcvB6Lgwa/nMv8IALu0KyNY9X4HSa3MtLohymuhbG9HgjrOh66+BkbsfA03H3bcT0+sPVJ0GKQ==
+  dependencies:
+    deepmerge "^4.2.2"
+
+"@sendgrid/mail@^7.6.2":
+  version "7.6.2"
+  resolved "https://registry.yarnpkg.com/@sendgrid/mail/-/mail-7.6.2.tgz#118650afbb58be82e3178fa172869d929d937118"
+  integrity sha512-IHHZFvgU95aqb11AevQvAfautj2pb8iW8UCiUJ2ae9pRF37e6EkBmU9NgdFjbQ/8Xhhm+KDVDzn/JLxDN/GiBw==
+  dependencies:
+    "@sendgrid/client" "^7.6.2"
+    "@sendgrid/helpers" "^7.6.2"
+
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.3.tgz#3802ddd21a50a949b6721ddd72da36e67e7f1b2d"
@@ -916,7 +920,7 @@
     buffer-layout "^1.2.0"
     dotenv "10.0.0"
 
-"@solana/web3.js@^1.17.0", "@solana/web3.js@^1.21.0", "@solana/web3.js@^1.34.0":
+"@solana/web3.js@^1.21.0", "@solana/web3.js@^1.34.0":
   version "1.34.0"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.34.0.tgz#33becf2c7e87497d73406374185e54e0b7bc235d"
   integrity sha512-6QvqN2DqEELvuV+5yUQM8P9fRiSG+6SzQ58HjumJqODu14r7eu5HXVWEymvKAvMLGME+0TmAdJHjw9xD5NgUWA==
@@ -946,6 +950,26 @@
     "@solana/buffer-layout" "^3.0.0"
     bn.js "^5.0.0"
     borsh "^0.4.0"
+    bs58 "^4.0.1"
+    buffer "6.0.1"
+    cross-fetch "^3.1.4"
+    jayson "^3.4.4"
+    js-sha3 "^0.8.0"
+    rpc-websockets "^7.4.2"
+    secp256k1 "^4.0.2"
+    superstruct "^0.14.2"
+    tweetnacl "^1.0.0"
+
+"@solana/web3.js@^1.36.0":
+  version "1.37.1"
+  resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-1.37.1.tgz#5a4d30a4cf79c4598e0a437e841c7942e31be74c"
+  integrity sha512-1zm1blRU6ANb8bOfONibKkNKoMyzE1e0Z88MagyRLF1AmfHc+18lFvqxSQKUdazLMHcioZ28h+GfyAaeCT63iA==
+  dependencies:
+    "@babel/runtime" "^7.12.5"
+    "@ethersproject/sha2" "^5.5.0"
+    "@solana/buffer-layout" "^4.0.0"
+    bn.js "^5.0.0"
+    borsh "^0.7.0"
     bs58 "^4.0.1"
     buffer "6.0.1"
     cross-fetch "^3.1.4"
@@ -1827,6 +1851,15 @@ borsh@^0.4.0:
   dependencies:
     "@types/bn.js" "^4.11.5"
     bn.js "^5.0.0"
+    bs58 "^4.0.0"
+    text-encoding-utf-8 "^1.0.2"
+
+borsh@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/borsh/-/borsh-0.7.0.tgz#6e9560d719d86d90dc589bca60ffc8a6c51fec2a"
+  integrity sha512-CLCsZGIBCFnPtkNnieW/a8wmreDmfUtjU2m9yHrzPXIlNbqVs0AQrSatSG6vdNYUqdc83tkQi2eHfF98ubzQLA==
+  dependencies:
+    bn.js "^5.2.0"
     bs58 "^4.0.0"
     text-encoding-utf-8 "^1.0.2"
 

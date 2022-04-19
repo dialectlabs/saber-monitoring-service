@@ -1,37 +1,29 @@
-import { QuarryEventSubscription } from '../src/saber-wars-api/quarry-event-api';
-import { getOwner, quarrySDK } from '../src/saber-wars-api/quarry-sdk-factory';
+import { ClaimEvent, StakeEvent } from '@quarryprotocol/quarry-sdk';
 import { getTokenInfo } from '../src/saber-wars-api/token-info-api';
-import { toDecimals } from '../src/saber-wars-api/saber-wars-api';
-
-const numberFormat = new Intl.NumberFormat('en-US');
+import { QuarryEventSubscription } from '../src/saber-wars-api/quarry-event-api';
+import { quarrySDK } from '../src/saber-wars-api/quarry-sdk-factory';
 
 async function main() {
   const defaultSubscription = new QuarryEventSubscription(
     quarrySDK.programs.Mine,
-    async (evt) => {
-      const resourceId = await getOwner(evt.data.authority);
-      if (
-        resourceId.toBase58() !== 'GNisgcTZZ2WS5PFAEkVUbFso3wNe22cjhmZiEjGcqeHD'
-      ) {
-        return;
-      }
-      if (evt.name === 'StakeEvent') {
-        console.log(JSON.stringify(evt));
-        const tokenInfo = await getTokenInfo(evt.data.token);
-        console.log(JSON.stringify(tokenInfo));
-        console.log(
-          `Success! You staked ${numberFormat.format(
-            toDecimals(evt.data.amount, tokenInfo.decimals),
-          )} ${tokenInfo.symbol} to ${tokenInfo.name}`,
-        );
-      }
-      if (evt.name === 'ClaimEvent') {
-        const tokenInfo = await getTokenInfo(evt.data.stakedToken);
-        console.log(
-          `Success! You claimed ${numberFormat.format(
-            toDecimals(evt.data.amount, tokenInfo.decimals),
-          )} ${tokenInfo.symbol} from ${tokenInfo.name}`,
-        );
+    async (it) => {
+      switch (it.name) {
+        case 'StakeEvent': {
+          const stakeEvent = it as StakeEvent;
+          const optionalParams = await getTokenInfo(
+            stakeEvent.data.token.toBase58(),
+          );
+          console.log(stakeEvent, optionalParams);
+          break;
+        }
+        case 'ClaimEvent': {
+          const claimEvent = it as ClaimEvent;
+          const optionalParams = await getTokenInfo(
+            claimEvent.data.rewardsToken.toBase58(),
+          );
+          console.log(claimEvent, optionalParams);
+          break;
+        }
       }
       return Promise.resolve();
     },

@@ -11,15 +11,12 @@ export abstract class DialectConnection {
     const wallet = Wallet_.embedded(keypair.secretKey);
     const RPC_URL = process.env.RPC_URL || 'http://localhost:8899';
     console.log('RPC url', RPC_URL);
-    const dialectConnection = new Connection(RPC_URL, {
-      commitment: 'recent',
-    });
+    const dialectConnection = new Connection(RPC_URL, 'recent');
     const dialectProvider = new Provider(
       dialectConnection,
       wallet,
       Provider.defaultOptions(),
     );
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const NETWORK_NAME: 'devnet' | 'localnet' =
       process.env.NETWORK_NAME ?? 'localnet';

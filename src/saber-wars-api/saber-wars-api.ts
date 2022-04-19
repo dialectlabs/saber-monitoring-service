@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { Rewarders, Sbr, TokenMintInfo } from './saber-wars-api-dto';
-import { buildGaugeSdk } from './quarry-sdk-factory';
+import { Rewarders, Sbr } from './saber-wars-api-dto';
 import { PublicKey } from '@solana/web3.js';
 import {
   findEpochGaugeAddress,
@@ -10,6 +9,8 @@ import {
 import BN from 'bn.js';
 import { QUARRY_CODERS } from '@quarryprotocol/quarry-sdk';
 import { Duration } from 'luxon';
+import { getTokenInfo } from './token-info-api';
+import { gaugeSdk } from './quarry-sdk-factory';
 
 const tribecaRegistrySbrUrl =
   'https://raw.githubusercontent.com/TribecaHQ/tribeca-registry-build/master/registry/mainnet/sbr.json';
@@ -52,8 +53,6 @@ export interface EpochInfo {
   currentEpochRemainingTime: Duration;
 }
 
-const gaugeSdk = buildGaugeSdk();
-
 function getEpochInfo(gaugemeister: GaugemeisterData) {
   const currentEpoch = gaugemeister.currentRewardsEpoch;
   const currentEpochRemainingTime = Duration.fromObject({
@@ -82,9 +81,7 @@ async function getPoolsInfo(
       const quarryAddress = new PublicKey(quarry.quarry);
 
       const tokenMintAddress = quarry.stakedToken.mint;
-      const tokenMintInfo = (
-        await axios.get<TokenMintInfo>(tokenMintInfoUrl(tokenMintAddress))
-      ).data;
+      const tokenMintInfo = await getTokenInfo(tokenMintAddress);
 
       const [gaugeAddress] = await findGaugeAddress(
         gaugemeisterAddress,

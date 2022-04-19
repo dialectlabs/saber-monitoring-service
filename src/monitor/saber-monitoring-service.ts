@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
   Context,
+  DialectNotification,
   Monitor,
   Monitors,
   Pipelines,
@@ -16,17 +17,63 @@ import { Duration } from 'luxon';
 import { getWarsInfo, PoolInfo } from '../saber-wars-api/saber-wars-api';
 import { NoopSubscriberRepository } from './noop-subscriber-repository';
 import { Cron } from '@nestjs/schedule';
-import { TwitterNotificationSink } from './twitter-notification-sink';
+import { DialectConnection } from './dialect-connection';
+import { Subject } from 'rxjs';
+import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
+import { quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
+import { ConsoleNotificationSink } from './console-notification-sink';
 
 @Injectable()
 export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
-  private readonly notificationSink: TwitterNotificationSink =
-    new TwitterNotificationSink();
+  private readonly notificationSink: ConsoleNotificationSink<DialectNotification> =
+    new ConsoleNotificationSink<DialectNotification>();
 
   private readonly logger = new Logger(SaberMonitoringService.name);
   private readonly numberFormat = new Intl.NumberFormat('en-US');
 
   onModuleInit() {
+    this.initWhaleAlertMonitor();
+    this.initFarmMonitor();
+  }
+
+  constructor(private readonly dialectConnection: DialectConnection) {}
+
+  private initFarmMonitor() {
+    const subject = new Subject<SourceData<DialectNotification>>();
+    new QuarryEventSubscription(quarrySDK.programs.Mine, (evt) => {
+      if (evt.name === 'StakeEvent') {
+        subject.next({
+          data: {
+            message: JSON.stringify(evt),
+          },
+          resourceId: evt.data.authority,
+        });
+      }
+      if (evt.name === 'ClaimEvent') {
+        subject.next({
+          data: {
+            message: JSON.stringify(evt),
+          },
+          resourceId: evt.data.authority,
+        });
+      }
+    }).start();
+
+    const monitor: Monitor<DialectNotification> = Monitors.builder({
+      monitorKeypair: this.dialectConnection.getKeypair(),
+      dialectProgram: this.dialectConnection.getProgram(),
+    })
+      .defineDataSource<DialectNotification>()
+      .push(subject)
+      .notify()
+      .custom(({ value }) => value, new ConsoleNotificationSink())
+      .and()
+      .dispatch('unicast')
+      .build();
+    monitor.start();
+  }
+
+  private initWhaleAlertMonitor() {
     const threshold = parseInt(process.env.WHALE_MONITOR_THRESHOLD);
 
     const monitor: Monitor<PoolInfo> = Monitors.builder({
@@ -59,7 +106,7 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
         return {
           message: this.createWhaleAlert(context),
         };
-      }, this.notificationSink)
+      }, new ConsoleNotificationSink())
       .and()
       .dispatch('unicast')
       .build();
@@ -121,7 +168,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     )} 
 
 ⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
-    await this.notificationSink.push({ message });
+    await this.notificationSink.push({ message }, []);
   }
 
   async onModuleDestroy() {

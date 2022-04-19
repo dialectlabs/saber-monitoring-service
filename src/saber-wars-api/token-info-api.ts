@@ -15,5 +15,5 @@ export async function getTokenInfo(address: string | PublicKey) {
       .then((it) => it.data);
     cache.set(tokenMintAddress, tokenMintInfo);
   }
-  return cache.get(tokenMintAddress)!;
+  return cache.get(tokenMintAddress);
 }

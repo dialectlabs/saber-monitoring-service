@@ -6,7 +6,7 @@ export class NoopSubscriberRepository implements SubscriberRepository {
   }
 
   findByResourceId(): Promise<ResourceId | null> {
-    return null;
+    return Promise.resolve(null);
   }
 
   subscribe(): any {

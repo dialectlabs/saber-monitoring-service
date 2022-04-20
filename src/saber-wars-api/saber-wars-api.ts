@@ -18,10 +18,7 @@ const tribecaRegistrySbrUrl =
 const rewardersUrl = (rewarderAddress: string) =>
   `https://raw.githubusercontent.com/QuarryProtocol/rewarder-list-build/master/mainnet-beta/rewarders/${rewarderAddress}/meta.json`;
 
-const tokenMintInfoUrl = (tokenMintAddress: string) =>
-  `https://cdn.jsdelivr.net/gh/CLBExchange/certified-token-list/101/${tokenMintAddress}.json`;
-
-function toDecimals(bn: BN, decimals: number): number {
+export function toDecimals(bn: BN, decimals: number): number {
   return bn.toNumber() / Math.pow(10, decimals);
 }
 
@@ -161,9 +158,9 @@ export async function getWarsInfo(): Promise<SaberWarsInfo> {
   const sbr: Sbr = (await axios.get<Sbr>(tribecaRegistrySbrUrl)).data;
 
   const gaugemeisterAddress = new PublicKey(sbr.quarry.gauge.gaugemeister);
-  const gaugemeister = await gaugeSdk.gauge.fetchGaugemeister(
+  const gaugemeister = (await gaugeSdk.gauge.fetchGaugemeister(
     gaugemeisterAddress,
-  );
+  ))!;
   const epochInfo = getEpochInfo(gaugemeister);
   const poolsInfo = await getPoolsInfo(gaugemeisterAddress, gaugemeister, sbr);
 

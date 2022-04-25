@@ -1,5 +1,5 @@
 import { GaugeSDK } from '@quarryprotocol/gauge';
-import { Connection, Keypair } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Provider } from '@project-serum/anchor';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { makeSaberProvider } from '@saberhq/anchor-contrib';
@@ -23,3 +23,22 @@ export const gaugeSdk = GaugeSDK.load({
 export const quarrySDK = QuarrySDK.load({
   provider,
 });
+
+const mmPkToOwnerPk: Map<string, PublicKey> = new Map<string, PublicKey>();
+
+export async function getOwner(authority: PublicKey): Promise<PublicKey> {
+  const cacheKey = authority.toBase58();
+  if (!mmPkToOwnerPk.has(cacheKey)) {
+    try {
+      const mm = await quarrySDK.mergeMine.fetchMergeMinerData(
+        new PublicKey(authority),
+      );
+      mmPkToOwnerPk.set(cacheKey, mm.data.owner);
+    } catch (e) {
+      mmPkToOwnerPk.set(cacheKey, authority);
+      // console.error(e);
+    }
+  }
+  const ownerPkBase58 = mmPkToOwnerPk.get(cacheKey)!;
+  return ownerPkBase58 && new PublicKey(ownerPkBase58);
+}

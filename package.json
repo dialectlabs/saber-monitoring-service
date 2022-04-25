@@ -30,7 +30,7 @@
     "@nestjs/schedule": "^1.0.2",
     "@project-serum/anchor": "0.23.0",
     "@quarryprotocol/gauge": "^0.2.2",
-    "@quarryprotocol/quarry-sdk": "^2.0.1",
+    "@quarryprotocol/quarry-sdk": "^5.0.2",
     "@saberhq/anchor-contrib": "^1.12.61",
     "@saberhq/solana-contrib": "^1.12.61",
     "@saberhq/token-utils": "^1.12.61",

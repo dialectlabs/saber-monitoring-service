@@ -814,11 +814,12 @@
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
-"@quarryprotocol/quarry-sdk@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@quarryprotocol/quarry-sdk/-/quarry-sdk-2.0.1.tgz#c297e30a549b7f5a08f2cf924c0d260a7b41505c"
-  integrity sha512-Yavy9rpFJlONez/SU1eLCgDP8q3mb0a33KturHABeWro9Afi1svCOaZnl2c9KLs4B0WnUrD06b4N7gKq+W3bWQ==
+"@quarryprotocol/quarry-sdk@^5.0.2":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@quarryprotocol/quarry-sdk/-/quarry-sdk-5.0.2.tgz#f306ef4c0446a2ae7432e6e0593bc3dcb75812ee"
+  integrity sha512-wczlmNfb8fk6WCZsLLR7ysSjgxl6ZdEJ7cNDhgvFpU9E1YMSN1f2l2NK9yw+VksuLxWCightFsBrHSqqIftDzQ==
   dependencies:
+    superstruct "^0.15.4"
     tiny-invariant "^1.2.0"
     tslib "^2.3.1"
 
@@ -5202,6 +5203,11 @@ superstruct@^0.14.2:
   version "0.14.2"
   resolved "https://registry.yarnpkg.com/superstruct/-/superstruct-0.14.2.tgz#0dbcdf3d83676588828f1cf5ed35cda02f59025b"
   integrity sha512-nPewA6m9mR3d6k7WkZ8N8zpTWfenFH3q9pA2PkuiZxINr9DKB2+40wEQf0ixn8VaGuJ78AB6iWOtStI+/4FKZQ==
+
+superstruct@^0.15.4:
+  version "0.15.4"
+  resolved "https://registry.yarnpkg.com/superstruct/-/superstruct-0.15.4.tgz#e3381dd84ca07e704e19f69eda74eee1a5efb1f9"
+  integrity sha512-eOoMeSbP9ZJChNOm/9RYjE+F36rYR966AAqeG3xhQB02j2sfAUXDp4EQ/7bAOqnlJnuFDB8yvOu50SocvKpUEw==
 
 supertest@^6.1.3:
   version "6.2.2"

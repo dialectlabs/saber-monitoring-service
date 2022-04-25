@@ -24,7 +24,7 @@ import { Cron } from '@nestjs/schedule';
 import { DialectConnection } from './dialect-connection';
 import { Subject } from 'rxjs';
 import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
-import { quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
+import { getOwner, quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
 import { getTokenInfo } from '../saber-wars-api/token-info-api';
 import { TwitterNotificationSink } from './twitter-notification-sink';
 import { OnChainSubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/on-chain-subscriber.repository';
@@ -108,7 +108,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
       }
       const resourceId = process.env.TEST_MODE
         ? (await subscriberRepository.findAll())[0]
-        : evt.data.authority;
+        : await getOwner(evt.data.authority);
       if (evt.name === 'StakeEvent') {
         const tokenInfo = await getTokenInfo(evt.data.token);
         quarryEvents.next({

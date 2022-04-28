@@ -113,7 +113,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         const tokenInfo = await getTokenInfo(evt.data.token);
         quarryEvents.next({
           data: {
-            message: `Confirmed stake of ${this.numberFormat.format(
+            message: `Success! You staked ${this.numberFormat.format(
               toDecimals(evt.data.amount, tokenInfo.decimals),
             )} ${tokenInfo.symbol} to ${tokenInfo.name}`,
           },
@@ -124,9 +124,9 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         const tokenInfo = await getTokenInfo(evt.data.rewardsToken);
         quarryEvents.next({
           data: {
-            message: `Confirmed reward claim of ${this.numberFormat.format(
+            message: `Success! You claimed ${this.numberFormat.format(
               toDecimals(evt.data.amount, tokenInfo.decimals),
-            )} ${tokenInfo.symbol} in ${tokenInfo.name}`,
+            )} ${tokenInfo.symbol} from ${tokenInfo.name}`,
           },
           resourceId,
         });

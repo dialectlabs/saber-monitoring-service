@@ -35,7 +35,7 @@ spec:
         - name: RPC_URL
           valueFrom:
             secretKeyRef:
-              key: MAINNET_RPC_URL
+              key: MAINNET_RPC_URL2
               name: env-vars
         - name: TWITTER_APP_KEY
           valueFrom:

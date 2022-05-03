@@ -121,7 +121,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         });
       }
       if (evt.name === 'ClaimEvent') {
-        const tokenInfo = await getTokenInfo(evt.data.rewardsToken);
+        const tokenInfo = await getTokenInfo(evt.data.stakedToken);
         quarryEvents.next({
           data: {
             message: `Success! You claimed ${this.numberFormat.format(

@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import {
   Context,
-  DialectNotification,
   Monitor,
   Monitors,
   Pipelines,
@@ -17,27 +16,19 @@ import { Duration } from 'luxon';
 import {
   getWarsInfo,
   PoolInfo,
-  toDecimals,
 } from '../saber-wars-api/saber-wars-api';
 import { NoopSubscriberRepository } from './noop-subscriber-repository';
 import { Cron } from '@nestjs/schedule';
 import { DialectConnection } from './dialect-connection';
-import { Subject } from 'rxjs';
-import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
-import { getOwner, quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
-import { getTokenInfo } from '../saber-wars-api/token-info-api';
 import { TwitterNotificationSink } from './twitter-notification-sink';
-import { OnChainSubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/on-chain-subscriber.repository';
-import { InMemorySubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/in-memory-subscriber.repository';
+import { PublicKey } from '@solana/web3.js';
 
 @Injectable()
-export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
-  private readonly notificationSink: TwitterNotificationSink =
+export class WhaleMonitoringService implements OnModuleInit, OnModuleDestroy {
+  private readonly twitterNotificationSink: TwitterNotificationSink =
     new TwitterNotificationSink();
-
-  private readonly logger = new Logger(SaberMonitoringService.name);
+  private readonly logger = new Logger(WhaleMonitoringService.name);
   private readonly numberFormat = new Intl.NumberFormat('en-US');
-
   constructor(private readonly dialectConnection: DialectConnection) {}
 
   private static getTriggerOutput(trace: Trace[]) {
@@ -46,7 +37,6 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.initWhaleAlertMonitor();
-    this.initFarmMonitor();
   }
 
   @Cron('0 0 11,19 * * *', {
@@ -84,70 +74,11 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     )} 
 
 ⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
-    await this.notificationSink.push({ message });
+    await this.twitterNotificationSink.push({ message });
   }
 
   async onModuleDestroy() {
     await Monitors.shutdown();
-  }
-
-  private initFarmMonitor() {
-    const onChainSubscriberRepository = new OnChainSubscriberRepository(
-      this.dialectConnection.getProgram(),
-      this.dialectConnection.getKeypair(),
-    );
-    const subscriberRepository = InMemorySubscriberRepository.decorate(
-      onChainSubscriberRepository,
-    );
-
-    const quarryEvents = new Subject<SourceData<DialectNotification>>();
-    new QuarryEventSubscription(quarrySDK.programs.Mine, async (evt) => {
-      if ((await subscriberRepository.findAll()).length === 0) {
-        this.logger.warn('No subscribers, skipping event');
-        return;
-      }
-      const resourceId = process.env.TEST_MODE
-        ? (await subscriberRepository.findAll())[0]
-        : await getOwner(evt.data.authority);
-      if (evt.name === 'StakeEvent') {
-        const tokenInfo = await getTokenInfo(evt.data.token);
-        quarryEvents.next({
-          data: {
-            message: `Success! You staked ${this.numberFormat.format(
-              toDecimals(evt.data.amount, tokenInfo.decimals),
-            )} ${tokenInfo.symbol} to ${tokenInfo.name}`,
-          },
-          resourceId,
-        });
-      }
-      if (evt.name === 'ClaimEvent') {
-        const tokenInfo = await getTokenInfo(evt.data.stakedToken);
-        quarryEvents.next({
-          data: {
-            message: `Success! You claimed ${this.numberFormat.format(
-              toDecimals(evt.data.amount, tokenInfo.decimals),
-            )} ${tokenInfo.symbol} from ${tokenInfo.name}`,
-          },
-          resourceId,
-        });
-      }
-    }).start();
-    const builder = Monitors.builder({
-      subscriberRepository,
-      monitorKeypair: this.dialectConnection.getKeypair(),
-      dialectProgram: this.dialectConnection.getProgram(),
-    })
-      .defineDataSource<DialectNotification>()
-      .push(quarryEvents)
-      .notify()
-      .dialectThread(({ value }) => {
-        this.logger.log(`Sending message ${value.message}`);
-        return value;
-      })
-      .and()
-      .dispatch('unicast');
-    const monitor: Monitor<DialectNotification> = builder.build();
-    monitor.start();
   }
 
   private initWhaleAlertMonitor() {
@@ -163,7 +94,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         const sourceData: SourceData<PoolInfo>[] = warsInfo.poolsInfo.map(
           (data) => ({
             data,
-            resourceId: data.address,
+            groupingKey: data.address.toBase58(),
           }),
         );
         return Promise.resolve(sourceData);
@@ -178,15 +109,21 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         ],
       })
       .notify()
-      .custom(({ context }) => {
-        const message = this.createWhaleAlert(context);
-        this.logger.log(message);
-        return {
-          message,
-        };
-      }, this.notificationSink)
+      .custom(
+        (val) => {
+          const message = this.createWhaleAlert(val.context);
+          this.logger.log(message);
+          return {
+            message,
+          };
+        },
+        this.twitterNotificationSink,
+        {
+          dispatch: 'unicast',
+          to: (val) => new PublicKey(val.groupingKey),
+        }
+      )
       .and()
-      .dispatch('unicast')
       .build();
     monitor.start();
   }
@@ -195,7 +132,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     trace,
     origin: { name: poolName, nextEpochRewardsPerDay: rewardsPerDay },
   }: Context<PoolInfo>) {
-    const triggerOutput = SaberMonitoringService.getTriggerOutput(trace)!;
+    const triggerOutput = WhaleMonitoringService.getTriggerOutput(trace)!;
     return `⚔️🐳🚨 Whale alert! 🚨🐳⚔️
 
 ${this.numberFormat.format(

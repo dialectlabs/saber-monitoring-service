@@ -62,7 +62,38 @@ spec:
             secretKeyRef:
               key: SABER_MESSAGING_PRIVATE_KEY
               name: env-vars
-        image: dialectlab/saber-monitoring-service:0.0.1
+        - name: TWILIO_ACCOUNT_SID
+          valueFrom:
+            secretKeyRef:
+              key: TWILIO_ACCOUNT_SID
+              name: env-vars
+        - name: TWILIO_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: TWILIO_AUTH_TOKEN
+              name: env-vars
+        - name: TWILIO_SMS_SENDER
+          value: "+15613366687"
+        - name: WEB2_SUBSCRIBER_SERVICE_BASE_URL
+          value: "https://dialectapi.to"
+        - name: WEB2_SUBSCRIBER_SERVICE_BASIC_AUTH
+          valueFrom:
+            secretKeyRef:
+              key: WALLET_ADDRESS_REGISTRY_SERVICE_BASIC_AUTH_USER
+              name: env-vars
+        - name: SENDGRID_KEY
+          valueFrom:
+            secretKeyRef:
+              key: SENDGRID_API_KEY
+              name: env-vars
+        - name: SENDGRID_EMAIL
+          value: "hello@dialect.to"
+        - name: TELEGRAM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              key: TELEGRAM_TOKEN
+              name: env-vars
+        image: dialectlab/saber-monitoring-service:0.1.0
         imagePullPolicy: Always
         name: saber-monitoring-service
         resources: {}

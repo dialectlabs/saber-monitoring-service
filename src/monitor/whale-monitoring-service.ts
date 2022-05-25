@@ -13,10 +13,7 @@ import {
   Trace,
 } from '@dialectlabs/monitor';
 import { Duration } from 'luxon';
-import {
-  getWarsInfo,
-  PoolInfo,
-} from '../saber-wars-api/saber-wars-api';
+import { getWarsInfo, PoolInfo } from '../saber-wars-api/saber-wars-api';
 import { NoopSubscriberRepository } from './noop-subscriber-repository';
 import { Cron } from '@nestjs/schedule';
 import { DialectConnection } from './dialect-connection';
@@ -29,6 +26,7 @@ export class WhaleMonitoringService implements OnModuleInit, OnModuleDestroy {
     new TwitterNotificationSink();
   private readonly logger = new Logger(WhaleMonitoringService.name);
   private readonly numberFormat = new Intl.NumberFormat('en-US');
+
   constructor(private readonly dialectConnection: DialectConnection) {}
 
   private static getTriggerOutput(trace: Trace[]) {
@@ -121,7 +119,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
         {
           dispatch: 'unicast',
           to: (val) => new PublicKey(val.groupingKey),
-        }
+        },
       )
       .and()
       .build();

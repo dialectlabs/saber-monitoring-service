@@ -15,9 +15,7 @@ import {
   RestWeb2SubscriberRepository,
 } from '@dialectlabs/monitor/lib/cjs/internal/rest-web2-subscriber.repository';
 import { findAllDistinct } from '@dialectlabs/monitor/lib/cjs/internal/subsbscriber-repository-utilts';
-import {
-  toDecimals,
-} from '../saber-wars-api/saber-wars-api';
+import { toDecimals } from '../saber-wars-api/saber-wars-api';
 import { DialectConnection } from './dialect-connection';
 import { Subject } from 'rxjs';
 import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
@@ -33,6 +31,7 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
   private readonly numberFormat = new Intl.NumberFormat('en-US');
   private readonly inMemoryWeb2SubscriberRepository: Web2SubscriberRepository;
   private readonly subscriberRepository: InMemorySubscriberRepository;
+
   constructor(private readonly dialectConnection: DialectConnection) {
     this.subscriberRepository = InMemorySubscriberRepository.decorate(
       new OnChainSubscriberRepository(
@@ -59,7 +58,6 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async initFarmMonitor() {
-    
     const subscribers = await findAllDistinct(
       this.subscriberRepository,
       this.inMemoryWeb2SubscriberRepository,
@@ -127,7 +125,10 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
             message: value.message,
           };
         },
-        { dispatch: 'unicast', to: ({ groupingKey }) => new PublicKey(groupingKey) },
+        {
+          dispatch: 'unicast',
+          to: ({ groupingKey }) => new PublicKey(groupingKey),
+        },
       )
       .telegram(
         ({ value }) => {
@@ -135,7 +136,10 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
             body: `⚔️ SABER: ` + value.message,
           };
         },
-        { dispatch: 'unicast', to: ({ groupingKey }) => new PublicKey(groupingKey) },
+        {
+          dispatch: 'unicast',
+          to: ({ groupingKey }) => new PublicKey(groupingKey),
+        },
       )
       .sms(
         ({ value }) => {
@@ -143,16 +147,24 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
             body: `⚔️ SABER: ` + value.message,
           };
         },
-        { dispatch: 'unicast', to: ({ groupingKey }) => new PublicKey(groupingKey) },
+        {
+          dispatch: 'unicast',
+          to: ({ groupingKey }) => new PublicKey(groupingKey),
+        },
       )
       .email(
         ({ value }) => {
           return {
-            subject: `⚔️ SABER: Succesful ${value.message.includes("claimed") ? "Claim" : "Stake"}`,
+            subject: `⚔️ SABER: Successful ${
+              value.message.includes('claimed') ? 'Claim' : 'Stake'
+            }`,
             text: value.message,
           };
         },
-        { dispatch: 'unicast', to: ({ groupingKey }) => new PublicKey(groupingKey) },
+        {
+          dispatch: 'unicast',
+          to: ({ groupingKey }) => new PublicKey(groupingKey),
+        },
       )
       .and()
       .build();

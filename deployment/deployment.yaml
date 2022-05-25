@@ -35,7 +35,7 @@ spec:
         - name: RPC_URL
           valueFrom:
             secretKeyRef:
-              key: MAINNET_RPC_URL2
+              key: MAINNET_RPC_URL
               name: env-vars
         - name: TWITTER_APP_KEY
           valueFrom:
@@ -93,7 +93,7 @@ spec:
             secretKeyRef:
               key: TELEGRAM_TOKEN
               name: env-vars
-        image: dialectlab/saber-monitoring-service:0.1.0
+        image: dialectlab/saber-monitoring-service:0.0.1
         imagePullPolicy: Always
         name: saber-monitoring-service
         resources: {}

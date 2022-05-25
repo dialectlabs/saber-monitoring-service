@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
   Context,
+  DialectNotification,
   Monitor,
   Monitors,
   Pipelines,
@@ -13,10 +14,21 @@ import {
   Trace,
 } from '@dialectlabs/monitor';
 import { Duration } from 'luxon';
-import { getWarsInfo, PoolInfo } from '../saber-wars-api/saber-wars-api';
+import {
+  getWarsInfo,
+  PoolInfo,
+  toDecimals,
+} from '../saber-wars-api/saber-wars-api';
 import { NoopSubscriberRepository } from './noop-subscriber-repository';
 import { Cron } from '@nestjs/schedule';
+import { DialectConnection } from './dialect-connection';
+import { Subject } from 'rxjs';
+import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
+import { getOwner, quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
+import { getTokenInfo } from '../saber-wars-api/token-info-api';
 import { TwitterNotificationSink } from './twitter-notification-sink';
+import { OnChainSubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/on-chain-subscriber.repository';
+import { InMemorySubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/in-memory-subscriber.repository';
 
 @Injectable()
 export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
@@ -26,64 +38,15 @@ export class SaberMonitoringService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SaberMonitoringService.name);
   private readonly numberFormat = new Intl.NumberFormat('en-US');
 
-  onModuleInit() {
-    const threshold = parseInt(process.env.WHALE_MONITOR_THRESHOLD);
-
-    const monitor: Monitor<PoolInfo> = Monitors.builder({
-      subscriberRepository: new NoopSubscriberRepository(),
-    })
-      .defineDataSource<PoolInfo>()
-      .poll(async () => {
-        this.logger.log('Polling saber wars data');
-        const warsInfo = await getWarsInfo();
-        const sourceData: SourceData<PoolInfo>[] = warsInfo.poolsInfo.map(
-          (data) => ({
-            data,
-            resourceId: data.address,
-          }),
-        );
-        return Promise.resolve(sourceData);
-      }, Duration.fromObject({ minutes: 1 }))
-      .transform<number, number>({
-        keys: ['nextEpochAbsoluteShare'],
-        pipelines: [
-          Pipelines.threshold({
-            type: 'increase',
-            threshold,
-          }),
-        ],
-      })
-      .notify()
-      .custom(({ context }) => {
-        this.logger.log('Building whale alert');
-        return {
-          message: this.createWhaleAlert(context),
-        };
-      }, this.notificationSink)
-      .and()
-      .dispatch('unicast')
-      .build();
-    monitor.start();
-  }
-
-  private createWhaleAlert({
-    trace,
-    origin: { name: poolName, nextEpochRewardsPerDay: rewardsPerDay },
-  }: Context<PoolInfo>) {
-    const triggerOutput = SaberMonitoringService.getTriggerOutput(trace);
-    return `⚔️🐳🚨 Whale alert! 🚨🐳⚔️
-
-${this.numberFormat.format(
-  Math.round(triggerOutput),
-)} votes committed to ${poolName} | ${this.numberFormat.format(
-      Math.round(rewardsPerDay),
-    )} SBR/day
-
-⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
-  }
+  constructor(private readonly dialectConnection: DialectConnection) {}
 
   private static getTriggerOutput(trace: Trace[]) {
     return trace.find((it) => it.type === 'trigger')?.output;
+  }
+
+  onModuleInit() {
+    this.initWhaleAlertMonitor();
+    this.initFarmMonitor();
   }
 
   @Cron('0 0 11,19 * * *', {
@@ -126,5 +89,121 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
 
   async onModuleDestroy() {
     await Monitors.shutdown();
+  }
+
+  private initFarmMonitor() {
+    const onChainSubscriberRepository = new OnChainSubscriberRepository(
+      this.dialectConnection.getProgram(),
+      this.dialectConnection.getKeypair(),
+    );
+    const subscriberRepository = InMemorySubscriberRepository.decorate(
+      onChainSubscriberRepository,
+    );
+
+    const quarryEvents = new Subject<SourceData<DialectNotification>>();
+    new QuarryEventSubscription(quarrySDK.programs.Mine, async (evt) => {
+      if ((await subscriberRepository.findAll()).length === 0) {
+        this.logger.warn('No subscribers, skipping event');
+        return;
+      }
+      const resourceId = process.env.TEST_MODE
+        ? (await subscriberRepository.findAll())[0]
+        : await getOwner(evt.data.authority);
+      if (evt.name === 'StakeEvent') {
+        const tokenInfo = await getTokenInfo(evt.data.token);
+        quarryEvents.next({
+          data: {
+            message: `Success! You staked ${this.numberFormat.format(
+              toDecimals(evt.data.amount, tokenInfo.decimals),
+            )} ${tokenInfo.symbol} to ${tokenInfo.name}`,
+          },
+          resourceId,
+        });
+      }
+      if (evt.name === 'ClaimEvent') {
+        const tokenInfo = await getTokenInfo(evt.data.stakedToken);
+        quarryEvents.next({
+          data: {
+            message: `Success! You claimed ${this.numberFormat.format(
+              toDecimals(evt.data.amount, tokenInfo.decimals),
+            )} ${tokenInfo.symbol} from ${tokenInfo.name}`,
+          },
+          resourceId,
+        });
+      }
+    }).start();
+    const builder = Monitors.builder({
+      subscriberRepository,
+      monitorKeypair: this.dialectConnection.getKeypair(),
+      dialectProgram: this.dialectConnection.getProgram(),
+    })
+      .defineDataSource<DialectNotification>()
+      .push(quarryEvents)
+      .notify()
+      .dialectThread(({ value }) => {
+        this.logger.log(`Sending message ${value.message}`);
+        return value;
+      })
+      .and()
+      .dispatch('unicast');
+    const monitor: Monitor<DialectNotification> = builder.build();
+    monitor.start();
+  }
+
+  private initWhaleAlertMonitor() {
+    const threshold = parseInt(process.env.WHALE_MONITOR_THRESHOLD!);
+
+    const monitor: Monitor<PoolInfo> = Monitors.builder({
+      subscriberRepository: new NoopSubscriberRepository(),
+    })
+      .defineDataSource<PoolInfo>()
+      .poll(async () => {
+        this.logger.log('Polling saber wars data');
+        const warsInfo = await getWarsInfo();
+        const sourceData: SourceData<PoolInfo>[] = warsInfo.poolsInfo.map(
+          (data) => ({
+            data,
+            resourceId: data.address,
+          }),
+        );
+        return Promise.resolve(sourceData);
+      }, Duration.fromObject({ minutes: 1 }))
+      .transform<number, number>({
+        keys: ['nextEpochAbsoluteShare'],
+        pipelines: [
+          Pipelines.threshold({
+            type: 'increase',
+            threshold,
+          }),
+        ],
+      })
+      .notify()
+      .custom(({ context }) => {
+        const message = this.createWhaleAlert(context);
+        this.logger.log(message);
+        return {
+          message,
+        };
+      }, this.notificationSink)
+      .and()
+      .dispatch('unicast')
+      .build();
+    monitor.start();
+  }
+
+  private createWhaleAlert({
+    trace,
+    origin: { name: poolName, nextEpochRewardsPerDay: rewardsPerDay },
+  }: Context<PoolInfo>) {
+    const triggerOutput = SaberMonitoringService.getTriggerOutput(trace)!;
+    return `⚔️🐳🚨 Whale alert! 🚨🐳⚔️
+
+${this.numberFormat.format(
+  Math.round(triggerOutput),
+)} votes committed to ${poolName} | ${this.numberFormat.format(
+      Math.round(rewardsPerDay),
+    )} SBR/day
+
+⚔️⚔️⚔️⚔️⚔️#SABERWARS⚔️⚔️⚔️⚔️⚔️`;
   }
 }

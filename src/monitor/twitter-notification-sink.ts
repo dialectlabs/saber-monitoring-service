@@ -7,19 +7,22 @@ export class TwitterNotificationSink
 {
   private readonly logger = new Logger(TwitterNotificationSink.name);
   // Instanciate with desired auth type (here's Bearer v2 auth)
-  private twitterClient = new TwitterApi({
-    appKey: process.env.TWITTER_APP_KEY,
-    appSecret: process.env.TWITTER_APP_SECRET,
-    accessToken: process.env.TWITTER_ACCESS_TOKEN,
-    accessSecret: process.env.TWITTER_ACCESS_SECRET,
-  });
+  private twitterClient =
+    !process.env.TEST_MODE &&
+    new TwitterApi({
+      appKey: process.env.TWITTER_APP_KEY!,
+      appSecret: process.env.TWITTER_APP_SECRET!,
+      accessToken: process.env.TWITTER_ACCESS_TOKEN,
+      accessSecret: process.env.TWITTER_ACCESS_SECRET,
+    });
 
   async push({ message: text }: DialectNotification): Promise<void> {
     this.logger.log(text);
-    return this.twitterClient.v2
-      .tweet({
+    if (this.twitterClient) {
+      return this.twitterClient!.v2.tweet({
         text,
-      })
-      .then();
+      }).then();
+    }
+    return Promise.resolve();
   }
 }

@@ -30,30 +30,37 @@ spec:
       - env:
         - name: WHALE_MONITOR_THRESHOLD
           value: "4000000"
-        - name: MAINNET_RPC_URL
+        - name: NETWORK_NAME
+          value: "mainnet"
+        - name: RPC_URL
           valueFrom:
             secretKeyRef:
-              key: MAINNET_RPC_URL
+              key: MAINNET_RPC_URL2
               name: env-vars
         - name: TWITTER_APP_KEY
           valueFrom:
             secretKeyRef:
-              key: TWITTER_APP_KEY
+              key: SABERWARS_TWITTER_APP_KEY
               name: env-vars
         - name: TWITTER_APP_SECRET
           valueFrom:
             secretKeyRef:
-              key: TWITTER_APP_SECRET
+              key: SABERWARS_TWITTER_APP_SECRET
               name: env-vars
         - name: TWITTER_ACCESS_TOKEN
           valueFrom:
             secretKeyRef:
-              key: TWITTER_ACCESS_TOKEN
+              key: SABERWARS_TWITTER_ACCESS_TOKEN
               name: env-vars
         - name: TWITTER_ACCESS_SECRET
           valueFrom:
             secretKeyRef:
-              key: TWITTER_ACCESS_SECRET
+              key: SABERWARS_TWITTER_ACCESS_SECRET
+              name: env-vars
+        - name: PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              key: SABER_MESSAGING_PRIVATE_KEY
               name: env-vars
         image: dialectlab/saber-monitoring-service:0.0.1
         imagePullPolicy: Always

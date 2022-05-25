@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { Rewarders, Sbr, TokenMintInfo } from './saber-wars-api-dto';
-import { buildGaugeSdk } from './quarry-sdk-factory';
+import { Rewarders, Sbr } from './saber-wars-api-dto';
 import { PublicKey } from '@solana/web3.js';
 import {
   findEpochGaugeAddress,
@@ -10,6 +9,8 @@ import {
 import BN from 'bn.js';
 import { QUARRY_CODERS } from '@quarryprotocol/quarry-sdk';
 import { Duration } from 'luxon';
+import { getTokenInfo } from './token-info-api';
+import { gaugeSdk } from './quarry-sdk-factory';
 
 const tribecaRegistrySbrUrl =
   'https://raw.githubusercontent.com/TribecaHQ/tribeca-registry-build/master/registry/mainnet/sbr.json';
@@ -17,10 +18,7 @@ const tribecaRegistrySbrUrl =
 const rewardersUrl = (rewarderAddress: string) =>
   `https://raw.githubusercontent.com/QuarryProtocol/rewarder-list-build/master/mainnet-beta/rewarders/${rewarderAddress}/meta.json`;
 
-const tokenMintInfoUrl = (tokenMintAddress: string) =>
-  `https://cdn.jsdelivr.net/gh/CLBExchange/certified-token-list/101/${tokenMintAddress}.json`;
-
-function toDecimals(bn: BN, decimals: number): number {
+export function toDecimals(bn: BN, decimals: number): number {
   return bn.toNumber() / Math.pow(10, decimals);
 }
 
@@ -52,8 +50,6 @@ export interface EpochInfo {
   currentEpochRemainingTime: Duration;
 }
 
-const gaugeSdk = buildGaugeSdk();
-
 function getEpochInfo(gaugemeister: GaugemeisterData) {
   const currentEpoch = gaugemeister.currentRewardsEpoch;
   const currentEpochRemainingTime = Duration.fromObject({
@@ -82,9 +78,7 @@ async function getPoolsInfo(
       const quarryAddress = new PublicKey(quarry.quarry);
 
       const tokenMintAddress = quarry.stakedToken.mint;
-      const tokenMintInfo = (
-        await axios.get<TokenMintInfo>(tokenMintInfoUrl(tokenMintAddress))
-      ).data;
+      const tokenMintInfo = await getTokenInfo(tokenMintAddress);
 
       const [gaugeAddress] = await findGaugeAddress(
         gaugemeisterAddress,
@@ -164,9 +158,9 @@ export async function getWarsInfo(): Promise<SaberWarsInfo> {
   const sbr: Sbr = (await axios.get<Sbr>(tribecaRegistrySbrUrl)).data;
 
   const gaugemeisterAddress = new PublicKey(sbr.quarry.gauge.gaugemeister);
-  const gaugemeister = await gaugeSdk.gauge.fetchGaugemeister(
+  const gaugemeister = (await gaugeSdk.gauge.fetchGaugemeister(
     gaugemeisterAddress,
-  );
+  ))!;
   const epochInfo = getEpochInfo(gaugemeister);
   const poolsInfo = await getPoolsInfo(gaugemeisterAddress, gaugemeister, sbr);
 

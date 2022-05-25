@@ -60,14 +60,32 @@ yarn
 
 ### Running locally
 
+#### generate a new keypair for friktion monitoring service and fund it
+
+```bash
+export keypairs_dir=~/projects/dialect
+solana-keygen new --outfile ${keypairs_dir}/saber-service-dev-local-key.json
+solana-keygen pubkey ${keypairs_dir}/saber-service-dev-local-key.json > ${keypairs_dir}/saber-service-dev-local-key.pub
+solana -k ${keypairs_dir}/saber-service-dev-local-key.json airdrop 300
+
+#### start server (test mode)
+
 ```shell
-MAINNET_RPC_URL=rpcUrl \
-TWITTER_APP_KEY=appKey \
-TWITTER_APP_SECRET=appSecret \
-TWITTER_ACCESS_TOKEN=accessToken \
-TWITTER_ACCESS_SECRET=accessSecret \
+export keypairs_dir=~/projects/dialect
+TEST_MODE=true \
 WHALE_MONITOR_THRESHOLD=5000 \
-  yarn start:dev
+RPC_URL= \
+QUARRY_RPC_URL= \
+NETWORK_NAME=localnet \
+PRIVATE_KEY=$(cat ${keypairs_dir}/saber-service-dev-local-key.json) yarn start:dev
+
+```
+
+#### start clients
+
+```shell
+export keypairs_dir=~/projects/dialect
+MONITORING_SERVICE_PUBLIC_KEY=$(cat ${keypairs_dir}/saber-service-dev-local-key.pub) ts-node test/saber-clients.ts
 ```
 
 ### Containerization

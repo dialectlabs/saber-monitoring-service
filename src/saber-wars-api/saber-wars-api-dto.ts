@@ -31,4 +31,5 @@ export interface StakedToken {
 export interface TokenMintInfo {
   name: string;
   symbol: string;
+  decimals: number;
 }

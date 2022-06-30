@@ -83,13 +83,19 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
           groupingKey: resourceId.toBase58(),
         });
       }
+
       if (evt.name === 'ClaimEvent') {
-        const tokenInfo = await getTokenInfo(evt.data.stakedToken);
+        const stakedTokenInfo = await getTokenInfo(evt.data.stakedToken);
+        const rewardsTokenInfo = await getTokenInfo(evt.data.rewardsToken);
+        /*
+          Construct message, e.g.:
+          Success! You claimed 0.5 SBR from USDH-USDC LP.
+        */
         quarryEvents.next({
           data: {
             message: `Success! You claimed ${this.numberFormat.format(
-              toDecimals(evt.data.amount, tokenInfo.decimals),
-            )} ${tokenInfo.symbol} from ${tokenInfo.name}`,
+              toDecimals(evt.data.amount, rewardsTokenInfo.decimals),
+            )} ${rewardsTokenInfo.symbol} from ${stakedTokenInfo.name}`,
           },
           groupingKey: resourceId.toBase58(),
         });

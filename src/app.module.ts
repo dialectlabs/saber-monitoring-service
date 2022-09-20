@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { DialectConnection } from './monitor/dialect-connection';
 import { WhaleMonitoringService } from './monitor/whale-monitoring-service';
 import { FarmMonitoringService } from './monitor/farm-monitoring-service';
 import { LoggerModule } from 'nestjs-pino';

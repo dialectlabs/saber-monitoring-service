@@ -6,7 +6,7 @@ import { makeSaberProvider } from '@saberhq/anchor-contrib';
 import { QuarrySDK } from '@quarryprotocol/quarry-sdk';
 
 const connection = new Connection(
-  process.env.QUARRY_RPC_URL ?? process.env.RPC_URL!,
+  process.env.DIALECT_SDK_SOLANA_RPC_URL!,
   {
     commitment: 'recent',
   },

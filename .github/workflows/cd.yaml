@@ -1,0 +1,63 @@
+name: CD
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      service_name:
+        required: true
+        type: string
+      service_image_tag:
+        required: true
+        type: string
+    secrets:
+      api_github_token:
+        required: true
+
+env:
+  DEPLOYMENT_SCRIPTS_REPO: dialectlabs/infrastructure
+
+jobs:
+  deployment:
+    name: Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Checkout deployment repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.DEPLOYMENT_SCRIPTS_REPO }}
+          token: ${{ secrets.api_github_token }}
+          path: ${{ env.DEPLOYMENT_SCRIPTS_REPO }}
+      - name: Set service name
+        id: service-name
+        run: |
+          echo "::set-output name=service_name::$(echo ${{ inputs.service_name }} | sed s/-/_/g)"
+      - name: Install hcledit
+        run: |
+          curl -L https://github.com/minamijoyo/hcledit/releases/download/v0.2.5/hcledit_0.2.5_linux_amd64.tar.gz | tar -xz
+          chmod +x ./hcledit
+      - name: Create version file
+        id: create-version-file
+        env:
+          ENVIRONMENT_DIR: "terraform-plans/environments/${{ inputs.environment }}"
+          SERVICE_RESOURCES_FILE: "terraform-plans/environments/${{ inputs.environment }}/svc-${{ inputs.service_name }}.tf"
+        run: |
+          mkdir -p ${{ env.ENVIRONMENT_DIR }}
+          cat ${{ env.DEPLOYMENT_SCRIPTS_REPO }}/${{ env.SERVICE_RESOURCES_FILE }} |\
+          ./hcledit attribute set locals.svc_${{ steps.service-name.outputs.service_name }}_image_version '"${{ inputs.service_image_tag }}"' \
+          > ${{ env.SERVICE_RESOURCES_FILE }}
+      - name: Create pull request
+        uses: paygoc6/action-pull-request-another-repo@v1.0.1
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.api_github_token }}
+        with:
+          source_folder: "terraform-plans"
+          destination_repo: ${{ env.DEPLOYMENT_SCRIPTS_REPO }}
+          destination_base_branch: 'main'
+          destination_head_branch: cd/${{ inputs.environment }}/${{ github.event.repository.name }}/${{ inputs.service_image_tag }}
+          user_email: ${{ github.event.pusher.email }}
+          user_name: ${{ github.actor }}

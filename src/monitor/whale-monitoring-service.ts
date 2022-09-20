@@ -14,11 +14,10 @@ import {
 } from '@dialectlabs/monitor';
 import { Duration } from 'luxon';
 import { getWarsInfo, PoolInfo } from '../saber-wars-api/saber-wars-api';
-import { NoopSubscriberRepository } from './noop-subscriber-repository';
 import { Cron } from '@nestjs/schedule';
-import { DialectConnection } from './dialect-connection';
 import { TwitterNotificationSink } from './twitter-notification-sink';
 import { PublicKey } from '@solana/web3.js';
+import { DialectSdk } from './dialect-sdk';
 
 @Injectable()
 export class WhaleMonitoringService implements OnModuleInit, OnModuleDestroy {
@@ -27,7 +26,7 @@ export class WhaleMonitoringService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WhaleMonitoringService.name);
   private readonly numberFormat = new Intl.NumberFormat('en-US');
 
-  constructor(private readonly dialectConnection: DialectConnection) {}
+  constructor(private readonly sdk: DialectSdk) {}
 
   private static getTriggerOutput(trace: Trace[]) {
     return trace.find((it) => it.type === 'trigger')?.output;
@@ -83,7 +82,7 @@ Time remaining in epoch: ${epochInfo.currentEpochRemainingTime.toFormat(
     const threshold = parseInt(process.env.WHALE_MONITOR_THRESHOLD!);
 
     const monitor: Monitor<PoolInfo> = Monitors.builder({
-      subscriberRepository: new NoopSubscriberRepository(),
+      sdk: this.sdk,
     })
       .defineDataSource<PoolInfo>()
       .poll(async () => {

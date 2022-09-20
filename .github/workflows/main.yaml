@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+
+env:
+  AWS_REGION: us-west-2
+
+jobs:
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install deps
+        run: yarn
+      - name: Build
+        run: yarn build
+
+  docker-image:
+    if: ${{ !contains(github.ref, 'heads/dependabot') }}
+    needs:
+      - integration
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Get image tag
+        id: get-image-tag
+        run: |
+          if [[ $GITHUB_REF_TYPE == 'tag' ]]; then
+            IMAGE_TAG=${GITHUB_REF/refs\/tags\//}
+          else
+            IMAGE_TAG="$(date -u +%Y%m%d%H%M)-$(git rev-parse --short HEAD)"
+          fi
+          echo "::set-output name=image_tag::$IMAGE_TAG"
+      - name: Build image and push to Amazon ECR
+        id: build-and-deploy-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ github.event.repository.name }}
+          IMAGE_TAG: ${{ steps.get-image-tag.outputs.image_tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+    outputs:
+      image_tag: ${{ steps.get-image-tag.outputs.image_tag }}
+
+  cd_development:
+    if: ${{ contains(github.ref, 'heads/main') }}
+    needs:
+      - docker-image
+    uses: ./.github/workflows/cd.yaml
+    with:
+      environment: development
+      service_name: ${{ github.event.repository.name }}
+      service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
+    secrets:
+      api_github_token: ${{ secrets.API_TOKEN_GITHUB }}
+
+  # cd_production:
+  #   if: ${{ contains(github.ref, 'heads/main') }}
+  #   needs:
+  #     - docker-image
+  #   uses: ./.github/workflows/cd.yaml
+  #   with:
+  #     environment: production
+  #     service_name: ${{ github.event.repository.name }}
+  #     service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
+  #   secrets:
+  #     api_github_token: ${{ secrets.API_TOKEN_GITHUB }}

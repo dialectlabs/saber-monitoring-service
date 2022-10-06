@@ -61,7 +61,7 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
         const tokenInfo = await getTokenInfo(evt.data.token);
         quarryEvents.next({
           data: {
-            title: '', // NOTE: "Saber: " prepended by data-service
+            title: 'Stake',
             message: `Success! You staked ${this.numberFormat.format(
               toDecimals(evt.data.amount, tokenInfo.decimals),
             )} ${tokenInfo.symbol} to ${tokenInfo.name}`,
@@ -79,7 +79,7 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
         */
         quarryEvents.next({
           data: {
-            title: '', // NOTE: "Saber: " prepended by data-service
+            title: 'Claim',
             message: `Success! You claimed ${this.numberFormat.format(
               toDecimals(evt.data.amount, rewardsTokenInfo.decimals),
             )} ${rewardsTokenInfo.symbol} from ${stakedTokenInfo.name}`,

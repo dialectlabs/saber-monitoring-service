@@ -5,12 +5,12 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import {
-  SourceData,
+  DialectSdkNotification,
   DialectSdkNotificationSink,
   DialectSdkSubscriberRepository,
   Monitors,
+  SourceData,
   SubscriberRepository,
-  DialectSdkNotification,
 } from '@dialectlabs/monitor';
 import { DialectSdk } from './dialect-sdk';
 import { InMemorySubscriberRepository } from '@dialectlabs/monitor/lib/cjs/internal/in-memory-subscriber.repository';
@@ -20,7 +20,7 @@ import { QuarryEventSubscription } from '../saber-wars-api/quarry-event-api';
 import { getOwner, quarrySDK } from '../saber-wars-api/quarry-sdk-factory';
 import { getTokenInfo } from '../saber-wars-api/token-info-api';
 import { PublicKey } from '@solana/web3.js';
-import { Duration, Interval } from 'luxon';
+import { Duration } from 'luxon';
 
 @Injectable()
 export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
@@ -30,7 +30,10 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
   private readonly dialectSdkNotificationSink: DialectSdkNotificationSink;
 
   constructor(private readonly sdk: DialectSdk) {
-    this.subscriberRepository = InMemorySubscriberRepository.decorate(new DialectSdkSubscriberRepository(sdk), Duration.fromObject({minute: 5}));
+    this.subscriberRepository = InMemorySubscriberRepository.decorate(
+      new DialectSdkSubscriberRepository(sdk),
+      Duration.fromObject({ minute: 5 }),
+    );
     this.dialectSdkNotificationSink = new DialectSdkNotificationSink(
       sdk,
       this.subscriberRepository,
@@ -46,10 +49,9 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async initFarmMonitor() {
-    const subscribers = await this.subscriberRepository.findAll();
-
     const quarryEvents = new Subject<SourceData<DialectSdkNotification>>();
     new QuarryEventSubscription(quarrySDK.programs.Mine, async (evt) => {
+      const subscribers = await this.subscriberRepository.findAll();
       if (subscribers.length === 0) {
         this.logger.warn('No subscribers, skipping event');
         return;
@@ -57,6 +59,10 @@ export class FarmMonitoringService implements OnModuleInit, OnModuleDestroy {
       const resourceId = process.env.TEST_MODE
         ? subscribers[0].resourceId
         : await getOwner(evt.data.authority);
+
+      if (!subscribers.find((it) => it.resourceId.equals(resourceId))) {
+        return;
+      }
       if (evt.name === 'StakeEvent') {
         const tokenInfo = await getTokenInfo(evt.data.token);
         quarryEvents.next({

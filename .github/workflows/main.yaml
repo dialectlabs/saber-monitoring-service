@@ -62,26 +62,26 @@ jobs:
     outputs:
       image_tag: ${{ steps.get-image-tag.outputs.image_tag }}
 
-  cd_development:
-    if: ${{ contains(github.ref, 'heads/main') }}
-    needs:
-      - docker-image
-    uses: ./.github/workflows/cd.yaml
-    with:
-      environment: development
-      service_name: ${{ github.event.repository.name }}
-      service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
-    secrets:
-      api_github_token: ${{ secrets.API_TOKEN_GITHUB }}
+#  cd_development:
+#    if: ${{ contains(github.ref, 'heads/main') }}
+#    needs:
+#      - docker-image
+#    uses: ./.github/workflows/cd.yaml
+#    with:
+#      environment: development
+#      service_name: ${{ github.event.repository.name }}
+#      service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
+#    secrets:
+#      api_github_token: ${{ secrets.API_TOKEN_GITHUB }}
 
-  # cd_production:
-  #   if: ${{ contains(github.ref, 'heads/main') }}
-  #   needs:
-  #     - docker-image
-  #   uses: ./.github/workflows/cd.yaml
-  #   with:
-  #     environment: production
-  #     service_name: ${{ github.event.repository.name }}
-  #     service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
-  #   secrets:
-  #     api_github_token: ${{ secrets.API_TOKEN_GITHUB }}
+   cd_production:
+     if: ${{ contains(github.ref, 'heads/main') }}
+     needs:
+       - docker-image
+     uses: ./.github/workflows/cd.yaml
+     with:
+       environment: production
+       service_name: ${{ github.event.repository.name }}
+       service_image_tag: ${{ needs.docker-image.outputs.image_tag }}
+     secrets:
+       api_github_token: ${{ secrets.API_TOKEN_GITHUB }}

@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@dialectlabs/monitor": "^3.3.2",
-    "@dialectlabs/sdk": "^0.9.0",
+    "@dialectlabs/sdk": "^1.4.0",
     "@gokiprotocol/client": "^0.6.1",
     "@nestjs/axios": "^0.1.0",
     "@nestjs/common": "^8.0.0",
